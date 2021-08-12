@@ -1,0 +1,49 @@
+service: hwhong-app
+
+package:
+  individually: true
+
+provider:
+  name: aws
+  runtime: python3.8
+  region: ap-northeast-2
+  stage: ${opt:stage, "dev"} # ${--stage옵션으로 받은값, 옵션없을시,default값}
+	# memorySize : 512
+
+# python package를 lambda layer에서 공통 관리하기 위한 plugin
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true  # docker 환경에서 python package 빌드 (추천)
+    layer:
+      name: hwhong-app-layer
+      description: hwhong app layer
+      compatibleRuntimes:
+        - python3.8
+
+functions:
+  fastapiApp:
+    name : ${self:provider.stage}-hwhong-app
+    handler: app/main.handler
+    environment:
+      STAGE: ${self:provider.stage}
+    package:
+      include:
+        - app/**
+      exclude:
+        - ".serverless/**"
+        - "node_modules/**"
+        - ".venv/**"
+        - "config/**"
+        - "requirements.txt"
+        - "package.json"
+        - "package-lock.json"
+        - "README.md"
+    layers:
+      - { Ref: PythonRequirementsLambdaLayer }
+    events:
+      - http:
+          method: any
+          path: /{proxy+}

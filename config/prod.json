@@ -1,0 +1,4 @@
+{
+	"env_01" : "My secret prod variable 01",
+	"env_02" : "My secret prod variable 02"
+}
